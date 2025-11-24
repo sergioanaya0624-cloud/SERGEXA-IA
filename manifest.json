@@ -1,0 +1,49 @@
+{
+  "name": "Asistente Diario IA",
+  "short_name": "AsistenteIA",
+<<<<<<< HEAD
+  "description": "Aplicación PWA con IA para tareas diarias",
+  "start_url": "/",
+=======
+  "description": "Asistente personal con IA para tareas diarias",
+  "start_url": "/?utm_source=homescreen",
+  "scope": "/",
+>>>>>>> 07277c119b6cb23cb78090d72d19187fc10b2016
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007AFF",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+<<<<<<< HEAD
+      "src": "assets/icons/icon-192x192.png",
+=======
+      "src": "/icon-192.png",
+>>>>>>> 07277c119b6cb23cb78090d72d19187fc10b2016
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+<<<<<<< HEAD
+      "src": "assets/icons/icon-512x512.png",
+=======
+      "src": "/icon-512.png",
+>>>>>>> 07277c119b6cb23cb78090d72d19187fc10b2016
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+<<<<<<< HEAD
+  ]
+}
+=======
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "es"
+}
+>>>>>>> 07277c119b6cb23cb78090d72d19187fc10b2016
