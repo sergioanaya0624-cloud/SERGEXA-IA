@@ -1,21 +1,17 @@
 {
   "version": 2,
-  "name": "mi-app-ia",
+  "name": "SERGEXA-IA",
   "builds": [
     { "src": "**/*", "use": "@vercel/static" }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|ico|svg|json))",
-      "dest": "/$1"
+      "source": "/(.*\\.(css|js|png|jpg|jpeg|gif|ico|svg|json))",
+      "destination": "/$1"
     },
     {
-      "src": "/(assets|css|js|modules|public)/(.*)",
-      "dest": "/$1/$2"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "cleanUrls": true,
