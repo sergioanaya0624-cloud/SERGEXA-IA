@@ -1,41 +1,73 @@
-# Asistente Diario IA - PWA Modular
+# React + TypeScript + Vite
 
-Una aplicación web progresiva (PWA) modular con inteligencia artificial para tareas diarias, completamente gratuita y de código abierto.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 🚀 Características
+Currently, two official plugins are available:
 
-- **Arquitectura Modular**: Sistema de módulos independientes y escalables
-- **PWA Completa**: Funciona offline y se puede instalar en cualquier dispositivo
-- **Diseño Responsive**: Adaptable a móviles, tablets y desktop
-- **Almacenamiento Local**: Tus datos se guardan localmente en el navegador
-- **Integración con IA**: Preparada para conectar con APIs de inteligencia artificial
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## 📦 Módulos Incluidos
+## React Compiler
 
-### 🏠 Inicio
-- Dashboard principal con acceso rápido a todos los módulos
-- Vista general del sistema
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### 📊 Módulo Laboral
-- **Inventario**: Control de productos y existencias
-- **Novedades**: Gestión de novedades del personal
-- **Informes**: Generación de reportes profesionales
+## Expanding the ESLint configuration
 
-### 💬 Mensajes WhatsApp
-- Procesamiento de texto con IA
-- Formateo automático de mensajes
-- Integración directa con WhatsApp
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-### 🎰 Módulo de Ocio
-- **Lotería**: Análisis predictivo de números
-- **Juegos**: Minijuegos para descansos
-- **Consejos**: Recomendaciones diarias personalizadas
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-## 🛠️ Instalación y Desarrollo
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-### Requisitos
-- Navegador web moderno
-- Editor de código (VS Code recomendado)
-- Git para control de versiones
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-### Estructura del Proyecto
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
