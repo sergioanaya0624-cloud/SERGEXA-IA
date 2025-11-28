@@ -16,11 +16,83 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // ====================== PERSISTENCIA DE DATOS ======================
+  // Cargar datos guardados al iniciar
+  useEffect(() => {
+    const savedData = localStorage.getItem('laboralModuleData');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      setFecha(data.fecha || new Date().toLocaleDateString('es-CO'));
+      setCompletos(data.completos || 0);
+      setIncompletos(data.incompletos || 0);
+      setBeneficioDia(data.beneficioDia || 0);
+      setNovedades(data.novedades || []);
+      setCavas(data.cavas || [
+        { grupo: "V. Rojas & Blancas (V.Rojas)", tipo: "", carros: 40, capPorCarro: 20, inventario: 0 },
+        { grupo: "V. Rojas & Blancas (V.Blancas)", tipo: "", carros: 22, capPorCarro: 25, inventario: 0 },
+        { grupo: "V. Acondicionamiento", tipo: "", carros: 22, capPorCarro: 25, inventario: 0 },
+        { grupo: "Patas & Manos", tipo: "", carros: 80, capPorCarro: 9, inventario: 0 },
+        { grupo: "Cabezas", tipo: "", carros: 80, capPorCarro: 9, inventario: 0 },
+      ]);
+      setStockTotal(data.stockTotal || 100);
+      setDanados(data.danados || 2);
+      setPercheros(data.percheros || [
+        { cava: "V. Rojas & Blancas", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+        { cava: "V. Acondicionamiento", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+        { cava: "Patas & Cabezas", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+        { cava: "Recepción", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+        { cava: "Retenidos", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+      ]);
+    }
+  }, []);
+
+  // Función para guardar datos automáticamente
+  const guardarDatos = () => {
+    const data = {
+      fecha,
+      completos,
+      incompletos,
+      beneficioDia,
+      novedades,
+      cavas,
+      stockTotal,
+      danados,
+      percheros
+    };
+    localStorage.setItem('laboralModuleData', JSON.stringify(data));
+  };
+
+  // Función para limpiar datos
+  const limpiarDatos = () => {
+    localStorage.removeItem('laboralModuleData');
+    setFecha(new Date().toLocaleDateString('es-CO'));
+    setCompletos(0);
+    setIncompletos(0);
+    setBeneficioDia(0);
+    setNovedades([]);
+    setCavas([
+      { grupo: "V. Rojas & Blancas (V.Rojas)", tipo: "", carros: 40, capPorCarro: 20, inventario: 0 },
+      { grupo: "V. Rojas & Blancas (V.Blancas)", tipo: "", carros: 22, capPorCarro: 25, inventario: 0 },
+      { grupo: "V. Acondicionamiento", tipo: "", carros: 22, capPorCarro: 25, inventario: 0 },
+      { grupo: "Patas & Manos", tipo: "", carros: 80, capPorCarro: 9, inventario: 0 },
+      { grupo: "Cabezas", tipo: "", carros: 80, capPorCarro: 9, inventario: 0 },
+    ]);
+    setStockTotal(100);
+    setDanados(2);
+    setPercheros([
+      { cava: "V. Rojas & Blancas", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+      { cava: "V. Acondicionamiento", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+      { cava: "Patas & Cabezas", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+      { cava: "Recepción", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+      { cava: "Retenidos", blancas: 0, rojas: 0, patasManos: 0, cabezas: 0, crudas: 0 },
+    ]);
+  };
+
   // ====================== ESTADOS COMPARTIDOS ======================
   const [fecha, setFecha] = useState(new Date().toLocaleDateString('es-CO'));
-  const [completos, setCompletos] = useState(42);
+  const [completos, setCompletos] = useState(0);
   const [incompletos, setIncompletos] = useState(0);
-  const [beneficioDia, setBeneficioDia] = useState<number | undefined>(920);
+  const [beneficioDia, setBeneficioDia] = useState<number | undefined>(0);
 
   // ==================== INICIO: PESTAÑA INVENTARIO FRÍO ====================
   const [novedades, setNovedades] = useState<{ cod: string; desc: string }[]>([]);
@@ -29,26 +101,37 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
 
   const agregarNovedad = () => {
     if (cod.trim() && desc.trim()) {
-      setNovedades([...novedades, { cod, desc }]);
+      const nuevasNovedades = [...novedades, { cod, desc }];
+      setNovedades(nuevasNovedades);
       setCod('');
       setDesc('');
+      // Guardar automáticamente
+      guardarDatos();
     }
   };
 
-  const eliminarNovedad = (i: number) => setNovedades(novedades.filter((_, idx) => idx !== i));
+  const eliminarNovedad = (i: number) => {
+    const nuevasNovedades = novedades.filter((_, idx) => idx !== i);
+    setNovedades(nuevasNovedades);
+    guardarDatos();
+  };
   // ==================== FIN: PESTAÑA INVENTARIO FRÍO ====================
 
   // ==================== INICIO: PESTAÑA OCUPACIÓN CAVAS ====================
   const [cavas, setCavas] = useState([
-    { grupo: "V. Rojas & Blancas (V.Rojas)", tipo: "18-Rojas", carros: 40, capPorCarro: 18, inventario: 673 },
-    { grupo: "V. Rojas & Blancas (V.Blancas)", tipo: "10-Blancas", carros: 22, capPorCarro: 10, inventario: 673 },
-    { grupo: "V. Acondicionamiento", tipo: "24-Blancas", carros: 22, capPorCarro: 24, inventario: 0 },
-    { grupo: "Patas & Manos", tipo: "8-Patas", carros: 80, capPorCarro: 8, inventario: 673 },
-    { grupo: "Cabezas", tipo: "9-Cabezas", carros: 80, capPorCarro: 9, inventario: 673 },
+    { grupo: "V. Rojas & Blancas (V.Rojas)", tipo: "", carros: 40, capPorCarro: 20, inventario: 0 },
+    { grupo: "V. Rojas & Blancas (V.Blancas)", tipo: "", carros: 22, capPorCarro: 25, inventario: 0 },
+    { grupo: "V. Acondicionamiento", tipo: "", carros: 22, capPorCarro: 25, inventario: 0 },
+    { grupo: "Patas & Manos", tipo: "", carros: 80, capPorCarro: 9, inventario: 0 },
+    { grupo: "Cabezas", tipo: "", carros: 80, capPorCarro: 9, inventario: 0 },
   ]);
 
   const actualizarCava = (i: number, campo: 'carros' | 'capPorCarro' | 'inventario', valor: number) => {
-    setCavas(prev => prev.map((c, idx) => idx === i ? { ...c, [campo]: valor } : c));
+    setCavas(prev => {
+      const nuevasCavas = prev.map((c, idx) => idx === i ? { ...c, [campo]: valor } : c);
+      guardarDatos();
+      return nuevasCavas;
+    });
   };
 
   const capacidadTotal = (c: typeof cavas[0]) => c.carros * c.capPorCarro;
@@ -68,7 +151,11 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
   ]);
 
   const actualizarPerchero = (i: number, campo: keyof typeof percheros[0], valor: number) => {
-    setPercheros(prev => prev.map((p, idx) => idx === i ? { ...p, [campo]: valor } : p));
+    setPercheros(prev => {
+      const nuevosPercheros = prev.map((p, idx) => idx === i ? { ...p, [campo]: valor } : p);
+      guardarDatos();
+      return nuevosPercheros;
+    });
   };
 
   // Calcular total en uso automáticamente
@@ -91,18 +178,19 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
 
   // ==================== FUNCIÓN GENERAR INFORME MEJORADA ====================
   const generarInforme = () => {
-    const logo = "https://drive.google.com/uc?id=1TBHnJ5KKg2CVFx-YtbKCbmWlbNKyvovR";
+    // Usar el logo local en lugar del de Google Drive
+    const logo = "/logo_informe.png"; // Ruta relativa desde la carpeta public
 
     // HTML para Beneficio del Día en tarjeta
     let htmlBeneficio = '';
     if (incluir.cavas && beneficioDia !== undefined) {
       htmlBeneficio = `
         <div style="text-align:center; margin:20px 0 30px 0;">
-          <h2 style="color:#4CAF50;text-align:center;margin:0 0 20px 0;font-size:22px;">Beneficio del día</h2>
+          <h2 style="color:#4CAF50;text-align:center;margin:0 0 20px 0;font-size:28px;font-weight:bold;">BENEFICIO DEL DÍA</h2>
           <div style="display:flex; justify-content:center; gap:20px; margin:0 auto; max-width:700px;">
-            <div style="background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; max-width:200px; border-top:4px solid #9b59b6;">
-              <div style="color:#7f8c8d; font-size:14px; margin-bottom:8px;">Animales Beneficiados</div>
-              <div style="font-size:28px; font-weight:bold; color:#9b59b6;">${beneficioDia}</div>
+            <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center; flex:1; max-width:250px; border-top:6px solid #9b59b6;">
+              <div style="color:#7f8c8d; font-size:18px; margin-bottom:12px;font-weight:bold;">ANIMALES BENEFICIADOS</div>
+              <div style="font-size:42px; font-weight:bold; color:#9b59b6;">${beneficioDia}</div>
             </div>
           </div>
         </div>
@@ -113,20 +201,20 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     let htmlInv = '';
     if (incluir.inv) {
       htmlInv = `
-        <h1 style="color:#4CAF50;text-align:center;margin:30px 0 20px;font-size:22px;">Inventario Producto frío en Cava</h1>
+        <h1 style="color:#4CAF50;text-align:center;margin:30px 0 25px;font-size:28px;font-weight:bold;">INVENTARIO PRODUCTO FRÍO EN CAVA</h1>
         
-        <div style="display:flex; justify-content:center; gap:20px; margin:25px 0 30px 0; flex-wrap:wrap;">
-          <div style="background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; max-width:200px; border-top:4px solid #27ae60;">
-            <div style="color:#7f8c8d; font-size:14px; margin-bottom:8px;">Juegos Completos</div>
-            <div style="font-size:28px; font-weight:bold; color:#27ae60;">${completos}</div>
+        <div style="display:flex; justify-content:center; gap:25px; margin:30px 0 35px 0; flex-wrap:wrap;">
+          <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center; flex:1; max-width:220px; border-top:6px solid #27ae60;">
+            <div style="color:#7f8c8d; font-size:16px; margin-bottom:12px;font-weight:bold;">JUEGOS COMPLETOS</div>
+            <div style="font-size:36px; font-weight:bold; color:#27ae60;">${completos}</div>
           </div>
-          <div style="background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; max-width:200px; border-top:4px solid #e74c3c;">
-            <div style="color:#7f8c8d; font-size:14px; margin-bottom:8px;">Juegos Incompletos</div>
-            <div style="font-size:28px; font-weight:bold; color:#e74c3c;">${incompletos}</div>
+          <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center; flex:1; max-width:220px; border-top:6px solid #e74c3c;">
+            <div style="color:#7f8c8d; font-size:16px; margin-bottom:12px;font-weight:bold;">JUEGOS INCOMPLETOS</div>
+            <div style="font-size:36px; font-weight:bold; color:#e74c3c;">${incompletos}</div>
           </div>
-          <div style="background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; max-width:200px; border-top:4px solid #3498db;">
-            <div style="color:#7f8c8d; font-size:14px; margin-bottom:8px;">Total Juegos</div>
-            <div style="font-size:28px; font-weight:bold; color:#3498db;">${completos + incompletos}</div>
+          <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center; flex:1; max-width:220px; border-top:6px solid #3498db;">
+            <div style="color:#7f8c8d; font-size:16px; margin-bottom:12px;font-weight:bold;">TOTAL JUEGOS</div>
+            <div style="font-size:36px; font-weight:bold; color:#3498db;">${completos + incompletos}</div>
           </div>
         </div>
       `;
@@ -134,15 +222,15 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       // Novedades por Código
       if (novedades.length > 0) {
         let filasNovedades = novedades.map(n => 
-          `<tr><td style="padding:6px 4px; font-size:12px;">${n.cod}</td><td style="padding:6px 4px; font-size:12px;">${n.desc}</td></tr>`
+          `<tr><td style="padding:10px 8px; font-size:16px;font-weight:bold;">${n.cod}</td><td style="padding:10px 8px; font-size:16px;">${n.desc}</td></tr>`
         ).join('');
         
         htmlInv += `
-          <h3 style="color:#4CAF50;margin:25px 0 12px;text-align:center; font-size:22px;">Novedades por Código</h3>
-          <table style="width:85%;margin:0 auto;font-size:12px; border-collapse:collapse;">
+          <h3 style="color:#4CAF50;margin:30px 0 15px;text-align:center; font-size:24px;font-weight:bold;">NOVEDADES POR CÓDIGO</h3>
+          <table style="width:90%;margin:0 auto;font-size:16px; border-collapse:collapse;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
             <tr style="background:#4CAF50;color:white;">
-              <th style="padding:8px 6px; font-size:12px; width:25%;">Código</th>
-              <th style="padding:8px 6px; font-size:12px; width:75%;">Detalle</th>
+              <th style="padding:12px 10px; font-size:18px; width:25%;font-weight:bold;">CÓDIGO</th>
+              <th style="padding:12px 10px; font-size:18px; width:75%;font-weight:bold;">DETALLE</th>
             </tr>
             ${filasNovedades}
           </table>
@@ -162,20 +250,20 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
           if (index === 0) {
             filasCavas += `
               <tr>
-                <td rowspan="${cavasDelGrupo.length}" style="background:#f0f0f0;font-weight:bold;vertical-align:middle;padding:8px 6px;font-size:14px; width:20%;">${grupo}</td>
-                <td style="padding:8px 6px;font-size:14px; width:15%;">${c.tipo} × ${c.carros}</td>
-                <td style="padding:8px 6px;font-size:14px; width:12%;">${capacidadTotal(c)}</td>
-                <td style="background:#fff2f2;padding:8px 6px;font-size:14px; width:12%;">${c.inventario}</td>
-                <td style="background:#fff8e1;font-weight:bold;padding:8px 6px;font-size:14px; width:10%;">${porcentaje(c)}%</td>
+                <td rowspan="${cavasDelGrupo.length}" style="background:#f0f0f0;font-weight:bold;vertical-align:middle;padding:12px 10px;font-size:18px; width:20%;">${grupo}</td>
+                <td style="padding:12px 10px;font-size:18px; width:15%;">${c.tipo} × ${c.carros}</td>
+                <td style="padding:12px 10px;font-size:18px; width:12%;font-weight:bold;">${capacidadTotal(c)}</td>
+                <td style="background:#fff2f2;padding:12px 10px;font-size:18px; width:12%;font-weight:bold;">${c.inventario}</td>
+                <td style="background:#fff8e1;font-weight:bold;padding:12px 10px;font-size:18px; width:10%;">${porcentaje(c)}%</td>
               </tr>
             `;
           } else {
             filasCavas += `
               <tr>
-                <td style="padding:8px 6px;font-size:14px;">${c.tipo} × ${c.carros}</td>
-                <td style="padding:8px 6px;font-size:14px;">${capacidadTotal(c)}</td>
-                <td style="background:#fff2f2;padding:8px 6px;font-size:14px;">${c.inventario}</td>
-                <td style="background:#fff8e1;font-weight:bold;padding:8px 6px;font-size:14px;">${porcentaje(c)}%</td>
+                <td style="padding:12px 10px;font-size:18px;">${c.tipo} × ${c.carros}</td>
+                <td style="padding:12px 10px;font-size:18px;font-weight:bold;">${capacidadTotal(c)}</td>
+                <td style="background:#fff2f2;padding:12px 10px;font-size:18px;font-weight:bold;">${c.inventario}</td>
+                <td style="background:#fff8e1;font-weight:bold;padding:12px 10px;font-size:18px;">${porcentaje(c)}%</td>
               </tr>
             `;
           }
@@ -187,20 +275,20 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       const promedioPorcentaje = Math.round(cavas.reduce((sum, c) => sum + porcentaje(c), 0) / cavas.length);
 
       htmlCavasTabla = `
-        <h1 style="color:#4CAF50;text-align:center;margin:40px 0 15px;font-size:24px;">Ocupación Cavas Vísceras</h1>
-        <table style="width:95%;margin:0 auto;border-collapse:collapse;font-size:14px;">
+        <h1 style="color:#4CAF50;text-align:center;margin:40px 0 20px;font-size:28px;font-weight:bold;">OCUPACIÓN CAVAS VÍSCERAS</h1>
+        <table style="width:95%;margin:0 auto;border-collapse:collapse;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
           <tr style="background:#4CAF50;color:white;">
-            <th style="padding:12px 8px;font-size:14px; width:20%;">Cava</th>
-            <th style="padding:12px 8px;font-size:14px; width:15%;">Configuración</th>
-            <th style="padding:12px 8px;font-size:14px; width:12%;">Capacidad Total</th>
-            <th style="padding:12px 8px;font-size:14px; width:12%;">Inventario Total</th>
-            <th style="padding:12px 8px;font-size:14px; width:10%;">Participación Total</th>
+            <th style="padding:15px 12px;font-size:20px; width:20%;font-weight:bold;">CAVA</th>
+            <th style="padding:15px 12px;font-size:20px; width:15%;font-weight:bold;">CARROS</th>
+            <th style="padding:15px 12px;font-size:20px; width:12%;font-weight:bold;">CAPACIDAD TOTAL</th>
+            <th style="padding:15px 12px;font-size:20px; width:12%;font-weight:bold;">INVENTARIO TOTAL</th>
+            <th style="padding:15px 12px;font-size:20px; width:10%;font-weight:bold;">PARTICIPACIÓN TOTAL</th>
           </tr>
           ${filasCavas}
           <tr style="background:#4CAF50;color:white;font-weight:bold;">
-            <td colspan="3" style="text-align:center;padding:12px 8px;font-size:15px;">Total general</td>
-            <td style="padding:12px 8px;font-size:15px;">${promedioInventario}</td>
-            <td style="padding:12px 8px;font-size:15px;">${promedioPorcentaje}%</td>
+            <td colspan="3" style="text-align:center;padding:15px 12px;font-size:20px;">TOTAL GENERAL</td>
+            <td style="padding:15px 12px;font-size:20px;">${promedioInventario}</td>
+            <td style="padding:15px 12px;font-size:20px;">${promedioPorcentaje}%</td>
           </tr>
         </table>
       `;
@@ -211,12 +299,12 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     if (incluir.percheros) {
       let filasPercheros = percheros.map(p => `
         <tr>
-          <td style="text-align:left; padding:10px 8px; font-weight:500; border:1px solid #ddd;">${p.cava}</td>
-          <td style="padding:10px 8px; border:1px solid #ddd;">${p.blancas || '-'}</td>
-          <td style="padding:10px 8px; border:1px solid #ddd;">${p.rojas || '-'}</td>
-          <td style="padding:10px 8px; border:1px solid #ddd;">${p.patasManos || '-'}</td>
-          <td style="padding:10px 8px; border:1px solid #ddd;">${p.cabezas || '-'}</td>
-          <td style="padding:10px 8px; border:1px solid #ddd;">${p.crudas || '-'}</td>
+          <td style="text-align:left; padding:12px 10px; font-weight:bold; border:2px solid #ddd;font-size:16px;">${p.cava}</td>
+          <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;font-weight:bold;">${p.blancas || '-'}</td>
+          <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;font-weight:bold;">${p.rojas || '-'}</td>
+          <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;font-weight:bold;">${p.patasManos || '-'}</td>
+          <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;font-weight:bold;">${p.cabezas || '-'}</td>
+          <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;font-weight:bold;">${p.crudas || '-'}</td>
         </tr>
       `).join('');
 
@@ -224,23 +312,23 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       let htmlDistribucion = '';
       if (incluir.distribucion) {
         htmlDistribucion = `
-          <h2 style="color:#4CAF50;text-align:center;margin:40px 0 15px;font-size:22px;">Distribución por Cavas</h2>
-          <table style="width:95%;margin:0 auto;border-collapse:collapse;font-size:14px;">
+          <h2 style="color:#4CAF50;text-align:center;margin:40px 0 20px;font-size:24px;font-weight:bold;">DISTRIBUCIÓN POR CAVAS</h2>
+          <table style="width:95%;margin:0 auto;border-collapse:collapse;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
             <tr style="background:#4CAF50;color:white;">
-              <th style="padding:12px 8px;font-size:14px; text-align:left;">Cavas</th>
-              <th style="padding:12px 8px;font-size:14px;">V-Blancas</th>
-              <th style="padding:12px 8px;font-size:14px;">V-Rojas</th>
-              <th style="padding:12px 8px;font-size:14px;">Patas/Manos</th>
-              <th style="padding:12px 8px;font-size:14px;">Cabezas</th>
-              <th style="padding:12px 8px;font-size:14px;">Crudas</th>
+              <th style="padding:15px 12px;font-size:18px; text-align:left;font-weight:bold;">CAVAS</th>
+              <th style="padding:15px 12px;font-size:18px;font-weight:bold;">V-BLANCAS</th>
+              <th style="padding:15px 12px;font-size:18px;font-weight:bold;">V-ROJAS</th>
+              <th style="padding:15px 12px;font-size:18px;font-weight:bold;">PATAS/MANOS</th>
+              <th style="padding:15px 12px;font-size:18px;font-weight:bold;">CABEZAS</th>
+              <th style="padding:15px 12px;font-size:18px;font-weight:bold;">CRUDAS</th>
             </tr>
-            <tr style="background:#f0f0f0; font-weight:600;">
-              <td style="text-align:left; padding:10px 8px; border:1px solid #ddd;">Mínimo para iniciar</td>
-              <td style="padding:10px 8px; border:1px solid #ddd;">8</td>
-              <td style="padding:10px 8px; border:1px solid #ddd;">8</td>
-              <td style="padding:10px 8px; border:1px solid #ddd;">2</td>
-              <td style="padding:10px 8px; border:1px solid #ddd;">5</td>
-              <td style="padding:10px 8px; border:1px solid #ddd;">1</td>
+            <tr style="background:#f0f0f0; font-weight:bold;">
+              <td style="text-align:left; padding:12px 10px; border:2px solid #ddd;font-size:16px;">MÍNIMO PARA INICIAR</td>
+              <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;">8</td>
+              <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;">8</td>
+              <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;">2</td>
+              <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;">5</td>
+              <td style="padding:12px 10px; border:2px solid #ddd;font-size:16px;">1</td>
             </tr>
             ${filasPercheros}
           </table>
@@ -248,25 +336,25 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       }
 
       htmlPercheros = `
-        <h1 style="color:#4CAF50;text-align:center;margin:40px 0 20px;font-size:24px;">Disponibilidad de Carros Percheros</h1>
+        <h1 style="color:#4CAF50;text-align:center;margin:40px 0 25px;font-size:28px;font-weight:bold;">DISPONIBILIDAD DE CARROS PERCHEROS</h1>
         
-        <div style="display:flex; justify-content:center; gap:20px; margin:25px 0 30px 0; flex-wrap:wrap;">
-          <div style="background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; max-width:180px; border-top:4px solid #3498db;">
-            <div style="color:#7f8c8d; font-size:14px; margin-bottom:8px;">Stock Total</div>
-            <div style="font-size:24px; font-weight:bold; color:#3498db;">${stockTotal}</div>
+        <div style="display:flex; justify-content:center; gap:25px; margin:30px 0 35px 0; flex-wrap:wrap;">
+          <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center; flex:1; max-width:200px; border-top:6px solid #3498db;">
+            <div style="color:#7f8c8d; font-size:16px; margin-bottom:12px;font-weight:bold;">STOCK TOTAL</div>
+            <div style="font-size:32px; font-weight:bold; color:#3498db;">${stockTotal}</div>
           </div>
-          <div style="background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; max-width:180px; border-top:4px solid #e74c3c;">
-            <div style="color:#7f8c8d; font-size:14px; margin-bottom:8px;">Dañados</div>
-            <div style="font-size:24px; font-weight:bold; color:#e74c3c;">${danados}</div>
+          <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center; flex:1; max-width:200px; border-top:6px solid #e74c3c;">
+            <div style="color:#7f8c8d; font-size:16px; margin-bottom:12px;font-weight:bold;">DAÑADOS</div>
+            <div style="font-size:32px; font-weight:bold; color:#e74c3c;">${danados}</div>
           </div>
-          <div style="background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; max-width:180px; border-top:4px solid #f39c12;">
-            <div style="color:#7f8c8d; font-size:14px; margin-bottom:8px;">En Uso</div>
-            <div style="font-size:24px; font-weight:bold; color:#f39c12;">${totalEnUso}</div>
+          <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center; flex:1; max-width:200px; border-top:6px solid #f39c12;">
+            <div style="color:#7f8c8d; font-size:16px; margin-bottom:12px;font-weight:bold;">EN USO</div>
+            <div style="font-size:32px; font-weight:bold; color:#f39c12;">${totalEnUso}</div>
           </div>
-          <div style="background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; max-width:180px; border-top:4px solid ${esBajoStock ? '#e74c3c' : '#27ae60'};">
-            <div style="color:#7f8c8d; font-size:14px; margin-bottom:8px;">Disponibles</div>
-            <div style="font-size:24px; font-weight:bold; color:${esBajoStock ? '#e74c3c' : '#27ae60'};">${disponibles}</div>
-            <div style="font-size:12px; color:${esBajoStock ? '#e74c3c' : '#27ae60'}; margin-top:5px; font-weight:bold;">
+          <div style="background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center; flex:1; max-width:200px; border-top:6px solid ${esBajoStock ? '#e74c3c' : '#27ae60'};">
+            <div style="color:#7f8c8d; font-size:16px; margin-bottom:12px;font-weight:bold;">DISPONIBLES</div>
+            <div style="font-size:32px; font-weight:bold; color:${esBajoStock ? '#e74c3c' : '#27ae60'};">${disponibles}</div>
+            <div style="font-size:14px; color:${esBajoStock ? '#e74c3c' : '#27ae60'}; margin-top:8px; font-weight:bold;">
               ${esBajoStock ? '⚠️ STOCK BAJO' : '✅ STOCK OK'}
             </div>
           </div>
@@ -276,49 +364,186 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       `;
     }
 
-    const htmlFinal = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Informe Colbeef</title>
-<style>
-  body{font-family:Arial,sans-serif;margin:15px;background:white;}
-  img{display:block;margin:12px auto;width:130px;}
-  .header {
-    text-align: center;
-    border-bottom: 2px solid #4CAF50;
-    padding-bottom: 20px;
-    margin-bottom: 30px;
-  }
-  .header h1 {
-    color: #2c3e50;
-    margin: 0;
-    font-size: 28px;
-  }
-  .header .subtitle {
-    color: #7f8c8d;
-    font-size: 16px;
-    margin-top: 5px;
-  }
-  h1{color:#4CAF50;text-align:center;font-size:24px;margin:20px 0;}
-  h2{color:#4CAF50;text-align:center;font-size:22px;margin:20px 0;}
-  table{width:95%;max-width:850px;margin:15px auto;border-collapse:collapse;font-size:14px;}
-  th,td{border:1px solid #ddd;padding:8px 6px;text-align:center;}
-  th{background:#4CAF50;color:white;}
-  .summary-table{width:60%;margin:15px auto;font-size:14px;}
-  .summary-table th,.summary-table td{text-align:center;padding:10px;border:1px solid #ddd;}
-  .summary-table th{background:#4CAF50;color:white;font-size:14px;}
-  .firma{margin-top:40px;text-align:center;color:#4CAF50;font-weight:bold;font-size:16px;}
-</style></head><body>
-  <div class="container">
-    <div class="header">
-      <img src="${logo}" alt="Colbeef" class="logo">
-      <h1>Gestión del área de Vísceras</h1>
-      <div class="subtitle">Informe generado el: ${fecha}</div>
+    const htmlFinal = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Informe Laboral</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: white;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+        img {
+            display: block;
+            margin: 15px auto;
+            width: 180px;
+            height: auto;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 25px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 15px 0 5px 0;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 20px;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+            font-size: 28px;
+            margin: 25px 0;
+            font-weight: bold;
+        }
+        h2 {
+            color: #4CAF50;
+            text-align: center;
+            font-size: 24px;
+            margin: 25px 0;
+            font-weight: bold;
+        }
+        h3 {
+            color: #4CAF50;
+            text-align: center;
+            font-size: 22px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        table {
+            width: 95%;
+            max-width: 900px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 2px solid #ddd;
+            padding: 12px 10px;
+            text-align: center;
+            font-size: 16px;
+        }
+        th {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        .firma {
+            margin-top: 50px;
+            text-align: center;
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .export-button {
+            display: block;
+            margin: 30px auto;
+            padding: 15px 30px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            width: 300px;
+        }
+        .export-button:hover {
+            background: #128C7E;
+        }
+        .export-button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="${logo}" alt="Logo Empresa" class="logo">
+            <h1>GESTIÓN DEL ÁREA DE VÍSCERAS</h1>
+            <div class="subtitle">INFORME GENERADO EL: ${fecha}</div>
+        </div>
     </div>
-  </div>
-  ${htmlBeneficio}
-  ${htmlInv}
-  ${htmlCavasTabla}
-  ${htmlPercheros}
-  <div class="firma">Sergio Anaya<br><small>Gestor de Vísceras - Colbeef S.A.S.</small></div>
-</body></html>`;
+    ${htmlBeneficio}
+    ${htmlInv}
+    ${htmlCavasTabla}
+    ${htmlPercheros}
+    <div class="firma">
+        SERGIO ANAYA<br>
+        <small style="font-size:16px;">GESTOR DE VÍSCERAS</small>
+    </div>
+    
+    <button class="export-button" onclick="exportarComoPNG()" id="exportBtn">
+        📸 Exportar como PNG
+    </button>
+
+    <script>
+        function exportarComoPNG() {
+            const button = document.getElementById('exportBtn');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '⏳ Generando imagen...';
+            button.disabled = true;
+
+            // Ocultar el botón temporalmente para la captura
+            button.style.display = 'none';
+
+            setTimeout(() => {
+                html2canvas(document.body, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff'
+                }).then(canvas => {
+                    // Mostrar el botón nuevamente
+                    button.style.display = 'block';
+                    
+                    const imagen = canvas.toDataURL('image/png');
+                    const enlace = document.createElement('a');
+                    enlace.download = 'Informe_Completo.png';
+                    enlace.href = imagen;
+                    enlace.click();
+                    
+                    button.innerHTML = '✅ Descargado';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                    
+                }).catch(error => {
+                    button.style.display = 'block';
+                    button.innerHTML = '❌ Error';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 3000);
+                });
+            }, 500);
+        }
+    </script>
+</body>
+</html>`;
 
     const win = window.open('', '_blank');
     if (win) { 
@@ -333,7 +558,8 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       padding: isMobile ? '10px' : '20px',
       maxWidth: '1100px',
       margin: '0 auto',
-      minHeight: '100vh'
+      minHeight: '100vh',
+      background: '#f5f5f5'
     },
     header: {
       textAlign: 'center' as const,
@@ -369,7 +595,8 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       borderRadius: '8px',
       fontWeight: 'bold',
       fontSize: isMobile ? '0.8rem' : '0.9rem',
-      minWidth: isMobile ? '100px' : 'auto'
+      minWidth: isMobile ? '100px' : 'auto',
+      cursor: 'pointer'
     },
     checkboxContainer: {
       background: '#e8f5e8',
@@ -414,14 +641,16 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       background: '#f8f9fa',
       padding: isMobile ? '10px' : '14px',
       borderRadius: '10px',
-      border: '1px solid #ddd'
+      border: '1px solid #ddd',
+      textAlign: 'center' as const
     },
     tableInput: {
       width: isMobile ? '50px' : '60px',
       padding: isMobile ? '4px' : '6px',
       border: '1px solid #ccc',
       borderRadius: '4px',
-      fontSize: isMobile ? '0.8rem' : '0.9rem'
+      fontSize: isMobile ? '0.8rem' : '0.9rem',
+      textAlign: 'center' as const
     },
     generateButton: {
       background: '#006400',
@@ -435,6 +664,144 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       boxShadow: '0 8px 20px rgba(0,100,0,0.3)',
       width: isMobile ? '100%' : 'auto',
       marginTop: isMobile ? '20px' : '40px'
+    },
+    actionButtons: {
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '15px',
+      marginBottom: '20px',
+      flexWrap: 'wrap' as const
+    },
+    secondaryButton: {
+      background: '#666',
+      color: 'white',
+      padding: isMobile ? '10px 20px' : '12px 25px',
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      fontWeight: 'bold',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer'
+    },
+    // Nuevos estilos para la vista de cavas centrada
+    cavaContainer: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      gap: '15px'
+    },
+    cavaRow: {
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 1fr 1.5fr 1fr',
+      gap: isMobile ? '10px' : '15px',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      maxWidth: '1000px',
+      margin: '0 auto',
+      padding: isMobile ? '12px' : '15px',
+      background: '#f9f9f9',
+      borderRadius: '12px',
+      border: '1px solid #ddd'
+    },
+    cavaHeader: {
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 1fr 1.5fr 1fr',
+      gap: isMobile ? '10px' : '15px',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      maxWidth: '1000px',
+      margin: '0 auto 15px auto',
+      padding: isMobile ? '10px' : '12px',
+      background: '#006400',
+      color: 'white',
+      borderRadius: '10px',
+      fontWeight: 'bold',
+      fontSize: isMobile ? '0.8rem' : '0.9rem',
+      textAlign: 'center' as const
+    },
+    cavaLabel: {
+      fontWeight: 'bold',
+      color: '#006400',
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      textAlign: 'center' as const
+    },
+    cavaInput: {
+      width: '100%',
+      padding: isMobile ? '8px' : '10px',
+      border: '1px solid #006400',
+      borderRadius: '6px',
+      background: '#f0f8f0',
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      textAlign: 'center' as const
+    },
+    cavaInputLarge: {
+      width: '100%',
+      padding: isMobile ? '12px' : '16px',
+      fontSize: isMobile ? '1.2rem' : '1.6rem',
+      border: '4px solid #d32f2f',
+      borderRadius: '10px',
+      background: '#ffebee',
+      fontWeight: 'bold',
+      textAlign: 'center' as const
+    },
+    cavaValue: {
+      fontWeight: 'bold',
+      textAlign: 'center' as const,
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      color: '#006400'
+    },
+    cavaPercentage: {
+      fontSize: isMobile ? '1.5rem' : '2rem',
+      fontWeight: 'bold',
+      color: '#006400',
+      textAlign: 'center' as const
+    },
+    // Nuevos estilos para carros percheros centrados
+    percherosContainer: {
+      background: 'white',
+      borderRadius: '16px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+      overflow: 'hidden',
+      marginBottom: isMobile ? '15px' : '0'
+    },
+    percherosHeader: {
+      background: '#2c3e50',
+      color: 'white',
+      padding: isMobile ? '12px' : '16px',
+      textAlign: 'center' as const
+    },
+    percherosContent: {
+      padding: isMobile ? '15px' : '20px'
+    },
+    percherosGrid: {
+      display: 'grid',
+      gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+      gap: isMobile ? '10px' : '16px',
+      marginBottom: isMobile ? '15px' : '24px'
+    },
+    percherosTableContainer: {
+      overflowX: 'auto',
+      borderRadius: '8px',
+      border: '1px solid #ddd'
+    },
+    percherosTable: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      fontSize: isMobile ? '0.7rem' : '0.85rem'
+    },
+    percherosTableCell: {
+      padding: isMobile ? '8px 6px' : '10px 8px',
+      textAlign: 'center' as const,
+      border: '1px solid #ddd'
+    },
+    percherosTableHeader: {
+      background: '#2c3e50',
+      color: 'white',
+      padding: isMobile ? '8px 6px' : '10px 8px',
+      textAlign: 'center' as const
     }
   };
 
@@ -443,13 +810,23 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       {/* CABECERA */}
       <div style={styles.header}>
         <h2 style={styles.title}>
-          Módulo Laboral - Colbeef
+          Módulo Laboral - <img src="/logo_informe.png" alt="Logo" style={{height: '40px', verticalAlign: 'middle', marginLeft: '10px'}} />
         </h2>
         <button
           onClick={() => setModule('inicio')}
           style={styles.closeButton}
         >
           ×
+        </button>
+      </div>
+
+      {/* BOTÓN DE LIMPIAR */}
+      <div style={styles.actionButtons}>
+        <button
+          onClick={limpiarDatos}
+          style={{...styles.secondaryButton, background: '#e74c3c'}}
+        >
+          🗑️ Limpiar Todo
         </button>
       </div>
 
@@ -516,21 +893,21 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             <input 
               type="text" 
               value={fecha} 
-              onChange={e => setFecha(e.target.value)} 
+              onChange={e => {setFecha(e.target.value); guardarDatos();}} 
               placeholder="Fecha" 
               style={styles.input} 
             />
             <input 
               type="number" 
               value={completos} 
-              onChange={e => setCompletos(+e.target.value || 0)} 
+              onChange={e => {setCompletos(+e.target.value || 0); guardarDatos();}} 
               placeholder="Juegos Viscerales Completos" 
               style={styles.input} 
             />
             <input 
               type="number" 
               value={incompletos} 
-              onChange={e => setIncompletos(+e.target.value || 0)} 
+              onChange={e => {setIncompletos(+e.target.value || 0); guardarDatos();}} 
               placeholder="Juegos Viscerales Incompletos" 
               style={{...styles.input, borderColor: '#ff9800'}} 
             />
@@ -599,7 +976,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
         </div>
       )}
 
-      {/* ==================== PESTAÑA OCUPACIÓN CAVAS ==================== */}
+      {/* ==================== PESTAÑA OCUPACIÓN CAVAS - MEJORADA ==================== */}
       {activeTab === 'cavas' && (
         <div style={styles.sectionContainer}>
           <div style={{ textAlign: 'center', marginBottom: isMobile ? '25px' : '35px' }}>
@@ -614,7 +991,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             <input
               type="number"
               value={beneficioDia || ''}
-              onChange={e => setBeneficioDia(e.target.value ? +e.target.value : undefined)}
+              onChange={e => {setBeneficioDia(e.target.value ? +e.target.value : undefined); guardarDatos();}}
               style={{
                 width: isMobile ? '200px' : '260px',
                 padding: isMobile ? '12px 16px' : '16px 20px',
@@ -627,7 +1004,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                 margin: '0 auto',
                 display: 'block'
               }}
-              placeholder="920"
+              placeholder="0"
             />
             <div style={{ 
               fontSize: isMobile ? '1.2rem' : '1.6rem', 
@@ -649,125 +1026,81 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             Configuración de Cavas
           </h3>
 
-          {cavas.map((c, i) => (
-            <div key={i} style={{ 
-              marginBottom: isMobile ? '15px' : '20px', 
-              padding: isMobile ? '10px' : '14px', 
-              background: i % 2 === 0 ? '#f9f9f9' : 'white', 
-              borderRadius: '12px' 
-            }}>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr 2fr 1.5fr', 
-                gap: isMobile ? '8px' : '10px', 
-                alignItems: 'center', 
-                fontSize: isMobile ? '0.8rem' : '14px' 
-              }}>
-                <div style={{ fontWeight: 'bold', color: '#006400', fontSize: isMobile ? '0.9rem' : '1rem' }}>
-                  {c.grupo}
-                </div>
+          {/* CABECERA DE LA TABLA DE CAVAS */}
+          <div style={styles.cavaHeader}>
+            <div>CAVA</div>
+            <div>CARRROS</div>
+            <div>CAP. POR CARRO</div>
+            <div>CAPACIDAD TOTAL</div>
+            <div>INVENTARIO</div>
+            <div>PARTICIPACIÓN</div>
+          </div>
+
+          {/* FILAS DE CAVAS - CENTRADAS Y ALINEADAS */}
+          <div style={styles.cavaContainer}>
+            {cavas.map((c, i) => (
+              <div key={i} style={styles.cavaRow}>
+                <div style={styles.cavaLabel}>{c.grupo}</div>
+                
                 <div>
                   <input 
                     type="number" 
                     value={c.carros} 
                     onChange={e => actualizarCava(i, 'carros', +e.target.value || 0)} 
-                    style={{ 
-                      width: '100%', 
-                      padding: isMobile ? '8px' : '10px', 
-                      border: '1px solid #006400', 
-                      borderRadius: '6px', 
-                      background: '#f0f8f0',
-                      fontSize: isMobile ? '0.9rem' : '1rem'
-                    }} 
+                    style={styles.cavaInput} 
                   />
                 </div>
+                
                 <div>
                   <input 
                     type="number" 
                     value={c.capPorCarro} 
                     onChange={e => actualizarCava(i, 'capPorCarro', +e.target.value || 0)} 
-                    style={{ 
-                      width: '100%', 
-                      padding: isMobile ? '8px' : '10px', 
-                      border: '1px solid #006400', 
-                      borderRadius: '6px', 
-                      background: '#f0f8f0',
-                      fontSize: isMobile ? '0.9rem' : '1rem'
-                    }} 
+                    style={styles.cavaInput} 
                   />
                 </div>
-                <div style={{ fontWeight: 'bold', textAlign: 'center', fontSize: isMobile ? '0.9rem' : '1rem' }}>
+                
+                <div style={styles.cavaValue}>
                   {capacidadTotal(c)}
                 </div>
+                
                 <div>
                   <input 
                     type="number" 
                     value={c.inventario} 
                     onChange={e => actualizarCava(i, 'inventario', +e.target.value || 0)} 
-                    style={{ 
-                      width: '100%', 
-                      padding: isMobile ? '12px' : '16px', 
-                      fontSize: isMobile ? '1.2rem' : '1.6rem', 
-                      border: '4px solid #d32f2f', 
-                      borderRadius: '10px', 
-                      background: '#ffebee', 
-                      fontWeight: 'bold',
-                      textAlign: 'center'
-                    }} 
+                    style={styles.cavaInputLarge} 
                   />
                 </div>
-                <div style={{ 
-                  fontSize: isMobile ? '1.5rem' : '2rem', 
-                  fontWeight: 'bold', 
-                  color: '#006400', 
-                  textAlign: 'center' 
-                }}>
+                
+                <div style={styles.cavaPercentage}>
                   {porcentaje(c)}%
                 </div>
               </div>
-              <div style={{ 
-                marginTop: '8px', 
-                fontSize: isMobile ? '0.7rem' : '13px', 
-                color: '#555', 
-                textAlign: 'center' 
-              }}>
-                {c.tipo}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
-      {/* ==================== NUEVA PESTAÑA CARROS PERCHEROS ==================== */}
+      {/* ==================== NUEVA PESTAÑA CARROS PERCHEROS - MEJORADA ==================== */}
       {activeTab === 'percheros' && (
-        <div style={{ 
-          background: 'white', 
-          borderRadius: '16px', 
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)', 
-          overflow: 'hidden',
-          marginBottom: isMobile ? '15px' : '0'
-        }}>
-          <div style={{ 
-            background: '#2c3e50', 
-            color: 'white', 
-            padding: isMobile ? '12px' : '16px', 
-            textAlign: 'center' 
-          }}>
+        <div style={styles.percherosContainer}>
+          <div style={styles.percherosHeader}>
             <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.3rem' }}>
               Inventario Carros Percheros
             </h3>
             <small>Actualización en tiempo real</small>
           </div>
 
-          <div style={{ padding: isMobile ? '15px' : '20px' }}>
-            {/* RESUMEN GENERAL */}
-            <div style={styles.grid4Col}>
+          <div style={styles.percherosContent}>
+            {/* RESUMEN GENERAL - CENTRADO */}
+            <div style={styles.percherosGrid}>
               <div style={styles.dataItem}>
                 <div style={{ fontSize: isMobile ? '0.7rem' : '0.8rem', color: '#6c757d' }}>Stock Total</div>
                 <input 
                   type="number" 
                   value={stockTotal} 
-                  onChange={e => setStockTotal(+e.target.value || 0)} 
+                  onChange={e => {setStockTotal(+e.target.value || 0); guardarDatos();}} 
                   style={{ 
                     width: '100%', 
                     padding: isMobile ? '6px' : '8px', 
@@ -775,7 +1108,8 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                     borderRadius: '6px', 
                     fontSize: isMobile ? '1rem' : '1.1rem', 
                     fontWeight: 'bold', 
-                    marginTop: '4px' 
+                    marginTop: '4px',
+                    textAlign: 'center'
                   }} 
                 />
               </div>
@@ -784,7 +1118,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                 <input 
                   type="number" 
                   value={danados} 
-                  onChange={e => setDanados(+e.target.value || 0)} 
+                  onChange={e => {setDanados(+e.target.value || 0); guardarDatos();}} 
                   style={{ 
                     width: '100%', 
                     padding: isMobile ? '6px' : '8px', 
@@ -792,7 +1126,8 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                     borderRadius: '6px', 
                     fontSize: isMobile ? '1rem' : '1.1rem', 
                     fontWeight: 'bold', 
-                    marginTop: '4px' 
+                    marginTop: '4px',
+                    textAlign: 'center'
                   }} 
                 />
               </div>
@@ -836,47 +1171,43 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
               </div>
             </div>
 
-            {/* TABLA DISTRIBUCIÓN (SIN OPL) */}
+            {/* TABLA DISTRIBUCIÓN - CENTRADA Y ALINEADA */}
             <h4 style={{ 
               color: '#2c3e50', 
               margin: isMobile ? '15px 0 8px' : '24px 0 12px', 
               fontWeight: '600',
-              fontSize: isMobile ? '0.9rem' : '1rem'
+              fontSize: isMobile ? '0.9rem' : '1rem',
+              textAlign: 'center'
             }}>
               Distribución por Cavas
             </h4>
-            <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #ddd' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: isMobile ? '0.7rem' : '0.85rem' }}>
+            <div style={styles.percherosTableContainer}>
+              <table style={styles.percherosTable}>
                 <thead>
-                  <tr style={{ background: '#2c3e50', color: 'white' }}>
-                    <th style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>Cava</th>
-                    <th style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>V-Blancas</th>
-                    <th style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>V-Rojas</th>
-                    <th style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>Patas/Manos</th>
-                    <th style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>Cabezas</th>
-                    <th style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>Crudas</th>
+                  <tr>
+                    <th style={styles.percherosTableHeader}>Cava</th>
+                    <th style={styles.percherosTableHeader}>V-Blancas</th>
+                    <th style={styles.percherosTableHeader}>V-Rojas</th>
+                    <th style={styles.percherosTableHeader}>Patas/Manos</th>
+                    <th style={styles.percherosTableHeader}>Cabezas</th>
+                    <th style={styles.percherosTableHeader}>Crudas</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style={{ background: '#f0f0f0', fontWeight: '600' }}>
-                    <td style={{ padding: isMobile ? '8px 6px' : '10px 8px', textAlign: 'left' }}>Mínimo inicio</td>
-                    <td style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>8</td>
-                    <td style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>8</td>
-                    <td style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>2</td>
-                    <td style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>5</td>
-                    <td style={{ padding: isMobile ? '8px 6px' : '10px 8px' }}>1</td>
+                    <td style={{ ...styles.percherosTableCell, textAlign: 'left' }}>Mínimo inicio</td>
+                    <td style={styles.percherosTableCell}>8</td>
+                    <td style={styles.percherosTableCell}>8</td>
+                    <td style={styles.percherosTableCell}>2</td>
+                    <td style={styles.percherosTableCell}>5</td>
+                    <td style={styles.percherosTableCell}>1</td>
                   </tr>
                   {percheros.map((p, i) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? '#fdfdfd' : 'white' }}>
-                      <td style={{ 
-                        padding: isMobile ? '8px 6px' : '10px 8px', 
-                        textAlign: 'left', 
-                        fontWeight: '500',
-                        fontSize: isMobile ? '0.7rem' : '0.85rem'
-                      }}>
+                      <td style={{ ...styles.percherosTableCell, textAlign: 'left', fontWeight: '500' }}>
                         {p.cava}
                       </td>
-                      <td>
+                      <td style={styles.percherosTableCell}>
                         <input 
                           type="number" 
                           value={p.blancas} 
@@ -884,7 +1215,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                           style={styles.tableInput} 
                         />
                       </td>
-                      <td>
+                      <td style={styles.percherosTableCell}>
                         <input 
                           type="number" 
                           value={p.rojas} 
@@ -892,7 +1223,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                           style={styles.tableInput} 
                         />
                       </td>
-                      <td>
+                      <td style={styles.percherosTableCell}>
                         <input 
                           type="number" 
                           value={p.patasManos} 
@@ -900,7 +1231,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                           style={styles.tableInput} 
                         />
                       </td>
-                      <td>
+                      <td style={styles.percherosTableCell}>
                         <input 
                           type="number" 
                           value={p.cabezas} 
@@ -908,7 +1239,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                           style={styles.tableInput} 
                         />
                       </td>
-                      <td>
+                      <td style={styles.percherosTableCell}>
                         <input 
                           type="number" 
                           value={p.crudas} 
