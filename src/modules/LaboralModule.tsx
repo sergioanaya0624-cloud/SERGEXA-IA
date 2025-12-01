@@ -6,7 +6,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
 
-  // ====================== DETECCIÓN MEJORADA DE DISPOSITIVOS ======================
+  // ====================== DETECCIÓN DE DISPOSITIVOS ======================
   useEffect(() => {
     const checkDevice = () => {
       const width = window.innerWidth;
@@ -107,7 +107,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       setNovedades(nuevasNovedades);
       setCod('');
       setDesc('');
-      // Guardar automáticamente
       guardarDatos();
     }
   };
@@ -141,7 +140,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
 
   // ==================== FUNCIÓN CORREGIDA PARA CALCULAR TOTAL GENERAL ====================
   const calcularTotalGeneral = () => {
-    // Agrupar V. Blancas (sumar V.Blancas + V. Acondicionamiento)
     const totalBlancas = cavas.reduce((sum, c) => {
       if (c.grupo === "V. Rojas & Blancas (V.Blancas)" || c.grupo === "V. Acondicionamiento") {
         return sum + c.inventario;
@@ -149,28 +147,21 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       return sum;
     }, 0);
 
-    // Obtener los valores de las 4 partes principales
     const vRojas = cavas.find(c => c.grupo === "V. Rojas & Blancas (V.Rojas)")?.inventario || 0;
     const patasManos = cavas.find(c => c.grupo === "Patas & Manos")?.inventario || 0;
     const cabezas = cavas.find(c => c.grupo === "Cabezas")?.inventario || 0;
 
-    // Las 4 partes que forman un juego completo
     const partes = [vRojas, totalBlancas, patasManos, cabezas];
-    
-    // Encontrar la parte con menor cantidad (determina juegos completos)
     const minJuegosCompletos = Math.min(...partes);
     
-    // Calcular juegos totales (cada parte faltante descuenta 0.25)
     let totalJuegos = minJuegosCompletos;
     
-    // Sumar las partes adicionales (cada una cuenta como 0.25)
     partes.forEach(parte => {
       if (parte > minJuegosCompletos) {
         totalJuegos += (parte - minJuegosCompletos) * 0.25;
       }
     });
 
-    // Calcular porcentaje promedio para la tabla
     const totalCapacidad = cavas.reduce((sum, c) => sum + capacidadTotal(c), 0);
     const totalInventario = cavas.reduce((sum, c) => sum + c.inventario, 0);
     const promedioPorcentaje = totalCapacidad > 0 ? 
@@ -185,7 +176,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
   };
   // ==================== FIN: PESTAÑA OCUPACIÓN CAVAS ====================
 
-  // ==================== INICIO: NUEVA PESTAÑA CARROS PERCHEROS ====================
+  // ==================== INICIO: PESTAÑA CARROS PERCHEROS ====================
   const [stockTotal, setStockTotal] = useState(100);
   const [danados, setDanados] = useState(2);
 
@@ -205,7 +196,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     });
   };
 
-  // Calcular total en uso automáticamente
   const totalEnUso = percheros.reduce((sum, p) => 
     sum + p.blancas + p.rojas + p.patasManos + p.cabezas + p.crudas, 0
   );
@@ -213,7 +203,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
   const disponibles = stockTotal - danados - totalEnUso;
   const esBajoStock = disponibles < 30;
 
-  // ==================== FIN: NUEVA PESTAÑA CARROS PERCHEROS ====================
+  // ==================== FIN: PESTAÑA CARROS PERCHEROS ====================
 
   // ====================== CHECKBOX INCLUIR ======================
   const [incluir, setIncluir] = useState({ 
@@ -223,22 +213,19 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     distribucion: true
   });
 
-  // ==================== FUNCIÓN GENERAR INFORME COMPACTO Y HD ====================
+  // ==================== FUNCIÓN GENERAR INFORME ====================
   const generarInforme = () => {
     const logo = "/logo_informe.png";
+    const { totalJuegos, promedioPorcentaje } = calcularTotalGeneral();
 
-    // CALCULAR TOTAL GENERAL CORREGIDO
-    const { totalJuegos, promedioPorcentaje, totalBlancas } = calcularTotalGeneral();
-
-    // HTML para Beneficio del Día - COMPACTO
     let htmlBeneficio = '';
     if (incluir.cavas && beneficioDia !== undefined) {
       htmlBeneficio = `
-        <div style="text-align:center; margin:10px 0 20px 0;">
+        <div style="text-align:center; margin:5px 0 10px 0;">
           <h2 style="color:#4CAF50;text-align:center;margin:0 0 15px 0;font-size:24px;font-weight:bold;">BENEFICIO DEL DÍA</h2>
           <div style="display:flex; justify-content:center; gap:15px; margin:0 auto; max-width:600px;">
             <div style="background:white; padding:20px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.12); text-align:center; flex:1; max-width:200px; border-top:5px solid #9b59b6;">
-              <div style="color:#7f8c8d; font-size:16px; margin-bottom:10px;font-weight:bold;">ANIMALES BENEFICIADOS</div>
+              <div style="color:#7f8c8d; font-size:14px; margin-bottom:10px;font-weight:bold;">ANIMALES BENEFICIADOS</div>
               <div style="font-size:36px; font-weight:bold; color:#9b59b6;">${beneficioDia}</div>
             </div>
           </div>
@@ -246,7 +233,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       `;
     }
 
-    // HTML para Inventario Frío - COMPACTO
     let htmlInv = '';
     if (incluir.inv) {
       htmlInv = `
@@ -268,7 +254,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
         </div>
       `;
 
-      // Novedades por Código - COMPACTO
       if (novedades.length > 0) {
         let filasNovedades = novedades.map(n => 
           `<tr><td style="padding:8px 6px; font-size:14px;font-weight:bold;">${n.cod}</td><td style="padding:8px 6px; font-size:14px;">${n.desc}</td></tr>`
@@ -287,7 +272,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       }
     }
 
-    // HTML para Cavas - COMPACTO CON TOTAL GENERAL CORREGIDO
     let htmlCavasTabla = '';
     if (incluir.cavas) {
       const gruposUnicos = [...new Set(cavas.map(c => c.grupo))];
@@ -319,13 +303,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
         });
       });
 
-      // Obtener valores individuales para mostrar en el cálculo
-      const vRojas = cavas.find(c => c.grupo === "V. Rojas & Blancas (V.Rojas)")?.inventario || 0;
-      const vBlancasIndividual = cavas.find(c => c.grupo === "V. Rojas & Blancas (V.Blancas)")?.inventario || 0;
-      const vAcondicionamiento = cavas.find(c => c.grupo === "V. Acondicionamiento")?.inventario || 0;
-      const patasManos = cavas.find(c => c.grupo === "Patas & Manos")?.inventario || 0;
-      const cabezas = cavas.find(c => c.grupo === "Cabezas")?.inventario || 0;
-
       htmlCavasTabla = `
         <h1 style="color:#4CAF50;text-align:center;margin:25px 0 15px;font-size:24px;font-weight:bold;">OCUPACIÓN CAVAS VÍSCERAS</h1>
         <table style="width:95%;margin:0 auto;border-collapse:collapse;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
@@ -343,10 +320,9 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             <td style="padding:12px 10px;font-size:24px;">${promedioPorcentaje}%</td>
           </tr>
         </table>
-             `;
+      `;
     }
 
-    // HTML para Carros Percheros - COMPACTO
     let htmlPercheros = '';
     if (incluir.percheros) {
       let filasPercheros = percheros.map(p => `
@@ -360,7 +336,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
         </tr>
       `).join('');
 
-      // Solo incluir distribución si el checkbox está activado
       let htmlDistribucion = '';
       if (incluir.distribucion) {
         htmlDistribucion = `
@@ -531,7 +506,6 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             cursor: not-allowed;
         }
         
-        /* Estilos responsivos para el informe */
         @media (max-width: 768px) {
             body {
                 margin: 10px;
@@ -583,8 +557,8 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     ${htmlCavasTabla}
     ${htmlPercheros}
     <div class="firma">
-        SERGIO ANAYA<br>
-        <small style="font-size:14px;">GESTOR DE VÍSCERAS</small>
+        <small style="font-size:24px;">SERGIO ANAYA<br>
+        <small style="font-size:24px;">GESTOR DE VÍSCERAS</small>
     </div>
     
     <button class="export-button" onclick="exportarComoPNGAltaCalidad()" id="exportBtn">
@@ -601,7 +575,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             button.style.display = 'none';
 
             const options = {
-                scale: 4, // CALIDAD 4K
+                scale: 4,
                 useCORS: true,
                 backgroundColor: '#ffffff',
                 logging: false,
@@ -659,16 +633,16 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     }
   };
 
-  // ==================== ESTILOS RESPONSIVOS MEJORADOS ====================
-  const getResponsiveValue = (mobile: any, tablet: any, desktop: any) => {
-    if (isMobile) return mobile;
-    if (isTablet) return tablet;
-    return desktop;
+  // ==================== ESTILOS RESPONSIVOS UNIFICADOS ====================
+  const getResponsiveSize = (mobile: number, tablet: number, desktop: number) => {
+    if (isMobile) return `${mobile}px`;
+    if (isTablet) return `${tablet}px`;
+    return `${desktop}px`;
   };
 
   const styles = {
     container: {
-      padding: getResponsiveValue('8px', '12px', '15px'),
+      padding: getResponsiveSize(10, 15, 20),
       maxWidth: '100%',
       margin: '0 auto',
       minHeight: '100vh',
@@ -677,149 +651,152 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     },
     header: {
       textAlign: 'center' as const,
-      marginBottom: getResponsiveValue('12px', '15px', '18px'),
+      marginBottom: getResponsiveSize(15, 20, 25),
       position: 'relative' as const
     },
     title: {
       color: '#006400',
-      fontSize: getResponsiveValue('1.3rem', '1.5rem', '1.8rem'),
+      fontSize: getResponsiveSize(18, 22, 26),
       fontWeight: 'bold',
-      marginBottom: getResponsiveValue('8px', '10px', '0')
+      marginBottom: getResponsiveSize(10, 12, 0)
     },
     closeButton: {
       position: 'absolute' as const,
-      top: getResponsiveValue('-8px', '-5px', '0'),
-      right: getResponsiveValue('0', '0', '0'),
-      fontSize: getResponsiveValue('1.8rem', '2rem', '2.2rem'),
+      top: getResponsiveSize(-5, 0, 5),
+      right: '0',
+      fontSize: getResponsiveSize(24, 28, 32),
       background: 'none',
       border: 'none',
       color: '#999',
       cursor: 'pointer',
-      padding: '5px'
+      padding: '5px',
+      lineHeight: '1'
     },
     tabsContainer: {
       display: 'flex',
       justifyContent: 'center',
-      gap: getResponsiveValue('4px', '6px', '8px'),
-      marginBottom: getResponsiveValue('12px', '15px', '18px'),
+      gap: getResponsiveSize(6, 8, 10),
+      marginBottom: getResponsiveSize(15, 18, 20),
       flexWrap: 'wrap' as const
     },
     tabButton: {
-      padding: getResponsiveValue('8px 12px', '9px 14px', '10px 16px'),
+      padding: getResponsiveSize(10, 12, 14),
       border: 'none',
       borderRadius: '8px',
       fontWeight: 'bold',
-      fontSize: getResponsiveValue('0.75rem', '0.8rem', '0.85rem'),
-      minWidth: getResponsiveValue('90px', '100px', '110px'),
+      fontSize: getResponsiveSize(14, 15, 16),
+      minWidth: getResponsiveSize(100, 120, 140),
       cursor: 'pointer',
-      flex: getResponsiveValue('1', 'none', 'none')
+      flex: isMobile ? '1' : 'none',
+      transition: 'all 0.3s ease'
     },
     checkboxContainer: {
       background: '#e8f5e8',
-      padding: getResponsiveValue('8px', '9px', '10px'),
+      padding: getResponsiveSize(10, 12, 14),
       borderRadius: '10px',
-      marginBottom: getResponsiveValue('12px', '15px', '18px'),
+      marginBottom: getResponsiveSize(15, 18, 20),
       textAlign: 'center' as const,
-      border: '2px solid #006400',
-      fontSize: getResponsiveValue('0.75rem', '0.8rem', '0.85rem')
+      border: '2px solid #006400'
     },
     checkboxLabel: {
-      margin: getResponsiveValue('0 6px', '0 8px', '0 10px'),
+      margin: `0 ${getResponsiveSize(8, 10, 12)}px`,
       display: isMobile ? 'block' : 'inline-block',
-      marginBottom: isMobile ? '4px' : '0',
-      fontSize: getResponsiveValue('0.75rem', '0.8rem', '0.85rem')
+      marginBottom: isMobile ? '8px' : '0',
+      fontSize: getResponsiveSize(14, 15, 16)
     },
     sectionContainer: {
       background: 'white',
-      padding: getResponsiveValue('12px', '16px', '20px'),
+      padding: getResponsiveSize(15, 20, 25),
       borderRadius: '12px',
       border: '2px solid #006400',
-      marginBottom: getResponsiveValue('12px', '15px', '0'),
+      marginBottom: getResponsiveSize(15, 20, 25),
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
     },
     input: {
-      padding: getResponsiveValue('10px', '11px', '12px'),
+      padding: getResponsiveSize(10, 12, 14),
       borderRadius: '8px',
       border: '2px solid #006400',
-      fontSize: getResponsiveValue('14px', '15px', '16px'),
+      fontSize: getResponsiveSize(14, 16, 18),
       width: '100%',
-      minHeight: '44px'
+      minHeight: getResponsiveSize(44, 48, 52)
     },
     grid2Col: {
       display: 'grid',
       gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-      gap: getResponsiveValue('12px', '14px', '16px')
+      gap: getResponsiveSize(10, 15, 20)
     },
     grid4Col: {
       display: 'grid',
       gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-      gap: getResponsiveValue('8px', '10px', '12px'),
-      marginBottom: getResponsiveValue('12px', '15px', '18px')
+      gap: getResponsiveSize(8, 12, 16),
+      marginBottom: getResponsiveSize(15, 20, 25)
     },
     dataItem: {
       background: '#f8f9fa',
-      padding: getResponsiveValue('8px', '10px', '12px'),
+      padding: getResponsiveSize(10, 12, 14),
       borderRadius: '8px',
       border: '1px solid #ddd',
-      textAlign: 'center' as const
+      textAlign: 'center' as const,
+      minHeight: getResponsiveSize(80, 90, 100)
     },
     tableInput: {
-      width: getResponsiveValue('45px', '50px', '55px'),
-      padding: getResponsiveValue('4px', '5px', '6px'),
+      width: getResponsiveSize(50, 60, 70),
+      padding: getResponsiveSize(6, 8, 10),
       border: '1px solid #ccc',
       borderRadius: '4px',
-      fontSize: getResponsiveValue('0.75rem', '0.8rem', '0.85rem'),
+      fontSize: getResponsiveSize(14, 15, 16),
       textAlign: 'center' as const
     },
     generateButton: {
       background: '#006400',
       color: 'white',
-      padding: getResponsiveValue('12px 30px', '14px 40px', '16px 50px'),
-      fontSize: getResponsiveValue('1.2rem', '1.4rem', '1.6rem'),
+      padding: `${getResponsiveSize(14, 16, 18)} ${getResponsiveSize(30, 40, 50)}`,
+      fontSize: getResponsiveSize(16, 18, 20),
       fontWeight: 'bold',
       border: 'none',
       borderRadius: '12px',
       cursor: 'pointer',
       boxShadow: '0 4px 12px rgba(0,100,0,0.3)',
       width: isMobile ? '100%' : 'auto',
-      marginTop: getResponsiveValue('15px', '20px', '25px')
+      marginTop: getResponsiveSize(20, 25, 30),
+      minHeight: getResponsiveSize(50, 55, 60)
     },
     actionButtons: {
       display: 'flex',
       justifyContent: 'center',
-      gap: '12px',
-      marginBottom: '15px',
+      gap: getResponsiveSize(10, 12, 15),
+      marginBottom: getResponsiveSize(15, 18, 20),
       flexWrap: 'wrap' as const
     },
     secondaryButton: {
       background: '#666',
       color: 'white',
-      padding: getResponsiveValue('8px 16px', '9px 18px', '10px 20px'),
-      fontSize: getResponsiveValue('0.8rem', '0.85rem', '0.9rem'),
+      padding: `${getResponsiveSize(8, 10, 12)} ${getResponsiveSize(16, 20, 24)}`,
+      fontSize: getResponsiveSize(14, 15, 16),
       fontWeight: 'bold',
       border: 'none',
       borderRadius: '8px',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      minHeight: getResponsiveSize(40, 45, 50)
     },
-    // Estilos para la vista de cavas responsiva
     cavaContainer: {
       display: 'flex',
       flexDirection: 'column' as const,
       alignItems: 'center',
       justifyContent: 'center',
       width: '100%',
-      gap: '12px'
+      gap: getResponsiveSize(10, 12, 15)
     },
     cavaRow: {
       display: 'grid',
       gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 1fr 1.5fr 1fr',
-      gap: getResponsiveValue('8px', '10px', '12px'),
+      gap: getResponsiveSize(8, 10, 12),
       alignItems: 'center',
       justifyContent: 'center',
       width: '100%',
       maxWidth: '1000px',
       margin: '0 auto',
-      padding: getResponsiveValue('10px', '12px', '14px'),
+      padding: getResponsiveSize(10, 12, 14),
       background: '#f9f9f9',
       borderRadius: '10px',
       border: '1px solid #ddd'
@@ -827,102 +804,121 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
     cavaHeader: {
       display: 'grid',
       gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 1fr 1.5fr 1fr',
-      gap: getResponsiveValue('8px', '10px', '12px'),
+      gap: getResponsiveSize(8, 10, 12),
       alignItems: 'center',
       justifyContent: 'center',
       width: '100%',
       maxWidth: '1000px',
       margin: '0 auto 12px auto',
-      padding: getResponsiveValue('8px', '10px', '12px'),
+      padding: getResponsiveSize(10, 12, 14),
       background: '#006400',
       color: 'white',
       borderRadius: '8px',
       fontWeight: 'bold',
-      fontSize: getResponsiveValue('0.75rem', '0.8rem', '0.85rem'),
+      fontSize: getResponsiveSize(14, 15, 16),
       textAlign: 'center' as const
     },
     cavaLabel: {
       fontWeight: 'bold',
       color: '#006400',
-      fontSize: getResponsiveValue('0.85rem', '0.9rem', '0.95rem'),
-      textAlign: 'center' as const
+      fontSize: getResponsiveSize(14, 15, 16),
+      textAlign: 'center' as const,
+      padding: getResponsiveSize(5, 8, 10)
     },
     cavaInput: {
       width: '100%',
-      padding: getResponsiveValue('6px', '7px', '8px'),
+      padding: getResponsiveSize(6, 8, 10),
       border: '1px solid #006400',
       borderRadius: '6px',
       background: '#f0f8f0',
-      fontSize: getResponsiveValue('0.85rem', '0.9rem', '0.95rem'),
-      textAlign: 'center' as const
+      fontSize: getResponsiveSize(14, 15, 16),
+      textAlign: 'center' as const,
+      minHeight: getResponsiveSize(40, 45, 50)
     },
     cavaInputLarge: {
       width: '100%',
-      padding: getResponsiveValue('10px', '12px', '14px'),
-      fontSize: getResponsiveValue('1.1rem', '1.3rem', '1.5rem'),
+      padding: getResponsiveSize(8, 10, 12),
+      fontSize: getResponsiveSize(16, 18, 20),
       border: '3px solid #d32f2f',
       borderRadius: '8px',
       background: '#ffebee',
       fontWeight: 'bold',
-      textAlign: 'center' as const
+      textAlign: 'center' as const,
+      minHeight: getResponsiveSize(45, 50, 55)
     },
     cavaValue: {
       fontWeight: 'bold',
       textAlign: 'center' as const,
-      fontSize: getResponsiveValue('0.85rem', '0.9rem', '0.95rem'),
-      color: '#006400'
+      fontSize: getResponsiveSize(14, 16, 18),
+      color: '#006400',
+      padding: getResponsiveSize(5, 8, 10)
     },
     cavaPercentage: {
-      fontSize: getResponsiveValue('1.3rem', '1.5rem', '1.7rem'),
+      fontSize: getResponsiveSize(16, 18, 20),
       fontWeight: 'bold',
       color: '#006400',
-      textAlign: 'center' as const
+      textAlign: 'center' as const,
+      padding: getResponsiveSize(5, 8, 10)
     },
-    // Estilos para carros percheros responsivos
     percherosContainer: {
       background: 'white',
       borderRadius: '12px',
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
       overflow: 'hidden',
-      marginBottom: isMobile ? '12px' : '0'
+      marginBottom: getResponsiveSize(15, 20, 25)
     },
     percherosHeader: {
       background: '#2c3e50',
       color: 'white',
-      padding: getResponsiveValue('10px', '12px', '14px'),
+      padding: getResponsiveSize(12, 15, 18),
       textAlign: 'center' as const
     },
     percherosContent: {
-      padding: getResponsiveValue('12px', '15px', '18px')
+      padding: getResponsiveSize(15, 20, 25)
     },
     percherosGrid: {
       display: 'grid',
       gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-      gap: getResponsiveValue('8px', '10px', '12px'),
-      marginBottom: getResponsiveValue('12px', '15px', '18px')
+      gap: getResponsiveSize(8, 12, 16),
+      marginBottom: getResponsiveSize(15, 20, 25)
     },
     percherosTableContainer: {
       overflowX: 'auto',
       borderRadius: '6px',
       border: '1px solid #ddd',
       WebkitOverflowScrolling: 'touch' as const,
-      marginBottom: '15px'
+      marginBottom: getResponsiveSize(15, 20, 25)
     },
     percherosTable: {
       width: '100%',
       borderCollapse: 'collapse' as const,
-      fontSize: getResponsiveValue('0.7rem', '0.75rem', '0.8rem')
+      fontSize: getResponsiveSize(14, 15, 16)
     },
     percherosTableCell: {
-      padding: getResponsiveValue('6px 4px', '7px 5px', '8px 6px'),
+      padding: getResponsiveSize(6, 8, 10),
       textAlign: 'center' as const,
-      border: '1px solid #ddd'
+      border: '1px solid #ddd',
+      minHeight: getResponsiveSize(40, 45, 50)
     },
     percherosTableHeader: {
       background: '#2c3e50',
       color: 'white',
-      padding: getResponsiveValue('6px 4px', '7px 5px', '8px 6px'),
-      textAlign: 'center' as const
+      padding: getResponsiveSize(8, 10, 12),
+      textAlign: 'center' as const,
+      fontWeight: 'bold'
+    },
+    beneficioInput: {
+      width: getResponsiveSize(120, 140, 160),
+      padding: getResponsiveSize(10, 12, 14),
+      fontSize: getResponsiveSize(18, 20, 22),
+      fontWeight: 'bold',
+      border: '3px solid #006400',
+      borderRadius: '10px',
+      background: '#e8f5e8',
+      textAlign: 'center' as const,
+      margin: '0 auto',
+      display: 'block',
+      minHeight: getResponsiveSize(50, 55, 60)
     }
   };
 
@@ -932,9 +928,9 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       <div style={styles.header}>
         <h2 style={styles.title}>
           Módulo Laboral - <img src="/logo_informe.png" alt="Logo" style={{
-            height: getResponsiveValue('25px', '30px', '35px'), 
+            height: getResponsiveSize(25, 30, 35), 
             verticalAlign: 'middle', 
-            marginLeft: getResponsiveValue('4px', '6px', '8px')
+            marginLeft: getResponsiveSize(5, 8, 10)
           }} />
         </h2>
         <button
@@ -989,9 +985,9 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
         </button>
       </div>
 
-      {/* CHECKBOX INCLUIR MEJORADO */}
+      {/* CHECKBOX INCLUIR */}
       <div style={styles.checkboxContainer}>
-        <strong>Incluir en el informe:</strong>
+        <strong style={{fontSize: getResponsiveSize(14, 16, 18)}}>Incluir en el informe:</strong>
         <label style={styles.checkboxLabel}>
           <input type="checkbox" checked={incluir.inv} onChange={e => setIncluir({ ...incluir, inv: e.target.checked })} /> Inventario
         </label>
@@ -1011,10 +1007,19 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       {/* ==================== PESTAÑA INVENTARIO FRÍO ==================== */}
       {activeTab === 'inventario' && (
         <div style={styles.sectionContainer}>
-          <h3 style={{ color: '#006400', marginBottom: getResponsiveValue('1.2rem', '1.4rem', '1.6rem'), fontSize: getResponsiveValue('1.1rem', '1.2rem', '1.3rem') }}>
+          <h3 style={{ 
+            color: '#006400', 
+            marginBottom: getResponsiveSize(20, 25, 30), 
+            fontSize: getResponsiveSize(18, 20, 22),
+            textAlign: 'center' as const
+          }}>
             Inventario Producto Frío en Cava
           </h3>
-          <div style={{ display: 'grid', gap: getResponsiveValue('1rem', '1.2rem', '1.4rem'), marginBottom: getResponsiveValue('1.2rem', '1.4rem', '1.6rem') }}>
+          <div style={{ 
+            display: 'grid', 
+            gap: getResponsiveSize(15, 20, 25), 
+            marginBottom: getResponsiveSize(20, 25, 30) 
+          }}>
             <input 
               type="text" 
               value={fecha} 
@@ -1038,10 +1043,20 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             />
           </div>
 
-          <h4 style={{ color: '#006400', margin: `${getResponsiveValue('1.2rem', '1.4rem', '1.6rem')} 0 ${getResponsiveValue('0.6rem', '0.7rem', '0.8rem')}`, fontSize: getResponsiveValue('0.9rem', '1rem', '1.1rem') }}>
+          <h4 style={{ 
+            color: '#006400', 
+            margin: `${getResponsiveSize(15, 20, 25)}px 0 ${getResponsiveSize(10, 12, 15)}px`, 
+            fontSize: getResponsiveSize(16, 18, 20),
+            textAlign: 'center' as const
+          }}>
             Novedades por Código
           </h4>
-          <div style={{ display: 'flex', gap: getResponsiveValue('0.4rem', '0.6rem', '0.8rem'), marginBottom: '1rem', flexDirection: isMobile ? 'column' : 'row' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: getResponsiveSize(8, 10, 12), 
+            marginBottom: getResponsiveSize(15, 20, 25), 
+            flexDirection: isMobile ? 'column' : 'row' 
+          }}>
             <input 
               placeholder="Código" 
               value={cod} 
@@ -1057,18 +1072,19 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             <button 
               onClick={agregarNovedad} 
               style={{
-                padding: getResponsiveValue('8px 12px', '9px 14px', '10px 16px'), 
+                padding: `${getResponsiveSize(8, 10, 12)}px ${getResponsiveSize(12, 15, 18)}px`, 
                 background: '#006400', 
                 color: 'white', 
                 border: 'none', 
                 borderRadius: '8px', 
                 cursor: 'pointer',
-                fontSize: getResponsiveValue('0.8rem', '0.85rem', '0.9rem'),
-                minHeight: '44px',
-                whiteSpace: 'nowrap' as const
+                fontSize: getResponsiveSize(14, 15, 16),
+                minHeight: getResponsiveSize(44, 48, 52),
+                whiteSpace: 'nowrap' as const,
+                fontWeight: 'bold'
               }}
             >
-              <Plus size={getResponsiveValue(16, 18, 20)} /> {isMobile ? 'Agregar' : 'Agregar'}
+              <Plus size={getResponsiveSize(18, 20, 22)} /> {isMobile ? 'Agregar' : 'Agregar Novedad'}
             </button>
           </div>
 
@@ -1077,13 +1093,14 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
               display: 'flex', 
               justifyContent: 'space-between', 
               background: '#fff3cd', 
-              padding: getResponsiveValue('6px', '8px', '10px'), 
+              padding: getResponsiveSize(8, 10, 12), 
               borderRadius: '6px', 
-              marginBottom: '6px',
+              marginBottom: getResponsiveSize(8, 10, 12),
               flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? '4px' : '0'
+              gap: isMobile ? '8px' : '0',
+              alignItems: 'center'
             }}>
-              <span style={{ fontSize: getResponsiveValue('0.8rem', '0.85rem', '0.9rem') }}>
+              <span style={{ fontSize: getResponsiveSize(14, 15, 16), flex: 1 }}>
                 <strong>{n.cod}</strong> → {n.desc}
               </span>
               <button 
@@ -1093,25 +1110,25 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                   background: 'none', 
                   border: 'none', 
                   cursor: 'pointer',
-                  alignSelf: isMobile ? 'flex-end' : 'center'
+                  padding: getResponsiveSize(4, 6, 8)
                 }}
               >
-                <Trash2 size={getResponsiveValue(14, 16, 18)} />
+                <Trash2 size={getResponsiveSize(16, 18, 20)} />
               </button>
             </div>
           ))}
         </div>
       )}
 
-      {/* ==================== PESTAÑA OCUPACIÓN CAVAS - MEJORADA ==================== */}
+      {/* ==================== PESTAÑA OCUPACIÓN CAVAS ==================== */}
       {activeTab === 'cavas' && (
         <div style={styles.sectionContainer}>
-          <div style={{ textAlign: 'center', marginBottom: getResponsiveValue('20px', '25px', '30px') }}>
+          <div style={{ textAlign: 'center', marginBottom: getResponsiveSize(20, 25, 30) }}>
             <div style={{ 
-              fontSize: getResponsiveValue('1.1rem', '1.2rem', '1.3rem'), 
+              fontSize: getResponsiveSize(16, 18, 20), 
               fontWeight: 'bold', 
               color: '#006400', 
-              marginBottom: '8px' 
+              marginBottom: getResponsiveSize(8, 10, 12) 
             }}>
               Beneficio del día
             </div>
@@ -1119,25 +1136,14 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
               type="number"
               value={beneficioDia || ''}
               onChange={e => {setBeneficioDia(e.target.value ? +e.target.value : undefined); guardarDatos();}}
-              style={{
-                width: getResponsiveValue('160px', '180px', '200px'),
-                padding: getResponsiveValue('10px 12px', '11px 14px', '12px 16px'),
-                fontSize: getResponsiveValue('1.6rem', '1.8rem', '2rem'),
-                fontWeight: 'bold',
-                border: '3px solid #006400',
-                borderRadius: '10px',
-                background: '#e8f5e8',
-                textAlign: 'center',
-                margin: '0 auto',
-                display: 'block'
-              }}
+              style={styles.beneficioInput}
               placeholder="0"
             />
             <div style={{ 
-              fontSize: getResponsiveValue('1rem', '1.1rem', '1.2rem'), 
+              fontSize: getResponsiveSize(14, 16, 18), 
               fontWeight: 'bold', 
               color: '#006400', 
-              marginTop: '6px' 
+              marginTop: getResponsiveSize(8, 10, 12) 
             }}>
               animales
             </div>
@@ -1146,9 +1152,9 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
           <h3 style={{ 
             textAlign: 'center', 
             color: '#006400', 
-            margin: `${getResponsiveValue('12px', '14px', '16px')} 0 ${getResponsiveValue('16px', '18px', '20px')}`, 
+            margin: `${getResponsiveSize(15, 20, 25)}px 0 ${getResponsiveSize(20, 25, 30)}px`, 
             fontWeight: 'bold',
-            fontSize: getResponsiveValue('1.1rem', '1.2rem', '1.3rem')
+            fontSize: getResponsiveSize(18, 20, 22)
           }}>
             Configuración de Cavas
           </h3>
@@ -1163,7 +1169,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
             <div>PARTICIPACIÓN</div>
           </div>
 
-          {/* FILAS DE CAVAS - CENTRADAS Y ALINEADAS */}
+          {/* FILAS DE CAVAS */}
           <div style={styles.cavaContainer}>
             {cavas.map((c, i) => (
               <div key={i} style={styles.cavaRow}>
@@ -1209,62 +1215,89 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
         </div>
       )}
 
-      {/* ==================== NUEVA PESTAÑA CARROS PERCHEROS - MEJORADA ==================== */}
+      {/* ==================== PESTAÑA CARROS PERCHEROS ==================== */}
       {activeTab === 'percheros' && (
         <div style={styles.percherosContainer}>
           <div style={styles.percherosHeader}>
-            <h3 style={{ margin: 0, fontSize: getResponsiveValue('1rem', '1.1rem', '1.2rem') }}>
+            <h3 style={{ 
+              margin: 0, 
+              fontSize: getResponsiveSize(18, 20, 22),
+              fontWeight: 'bold'
+            }}>
               Inventario Carros Percheros
             </h3>
-            <small style={{fontSize: getResponsiveValue('0.7rem', '0.75rem', '0.8rem')}}>Actualización en tiempo real</small>
+            <small style={{
+              fontSize: getResponsiveSize(12, 14, 16),
+              opacity: 0.9
+            }}>
+              Actualización en tiempo real
+            </small>
           </div>
 
           <div style={styles.percherosContent}>
-            {/* RESUMEN GENERAL - CENTRADO */}
+            {/* RESUMEN GENERAL */}
             <div style={styles.percherosGrid}>
               <div style={styles.dataItem}>
-                <div style={{ fontSize: getResponsiveValue('0.65rem', '0.7rem', '0.75rem'), color: '#6c757d' }}>Stock Total</div>
+                <div style={{ 
+                  fontSize: getResponsiveSize(12, 14, 16), 
+                  color: '#6c757d',
+                  marginBottom: getResponsiveSize(5, 8, 10)
+                }}>
+                  Stock Total
+                </div>
                 <input 
                   type="number" 
                   value={stockTotal} 
                   onChange={e => {setStockTotal(+e.target.value || 0); guardarDatos();}} 
                   style={{ 
                     width: '100%', 
-                    padding: getResponsiveValue('5px', '6px', '7px'), 
+                    padding: getResponsiveSize(6, 8, 10), 
                     border: '1px solid #999', 
                     borderRadius: '6px', 
-                    fontSize: getResponsiveValue('0.9rem', '0.95rem', '1rem'), 
+                    fontSize: getResponsiveSize(16, 18, 20), 
                     fontWeight: 'bold', 
-                    marginTop: '4px',
+                    marginTop: getResponsiveSize(4, 6, 8),
                     textAlign: 'center'
                   }} 
                 />
               </div>
               <div style={styles.dataItem}>
-                <div style={{ fontSize: getResponsiveValue('0.65rem', '0.7rem', '0.75rem'), color: '#6c757d' }}>Dañados</div>
+                <div style={{ 
+                  fontSize: getResponsiveSize(12, 14, 16), 
+                  color: '#6c757d',
+                  marginBottom: getResponsiveSize(5, 8, 10)
+                }}>
+                  Dañados
+                </div>
                 <input 
                   type="number" 
                   value={danados} 
                   onChange={e => {setDanados(+e.target.value || 0); guardarDatos();}} 
                   style={{ 
                     width: '100%', 
-                    padding: getResponsiveValue('5px', '6px', '7px'), 
+                    padding: getResponsiveSize(6, 8, 10), 
                     border: '1px solid #999', 
                     borderRadius: '6px', 
-                    fontSize: getResponsiveValue('0.9rem', '0.95rem', '1rem'), 
+                    fontSize: getResponsiveSize(16, 18, 20), 
                     fontWeight: 'bold', 
-                    marginTop: '4px',
+                    marginTop: getResponsiveSize(4, 6, 8),
                     textAlign: 'center'
                   }} 
                 />
               </div>
               <div style={styles.dataItem}>
-                <div style={{ fontSize: getResponsiveValue('0.65rem', '0.7rem', '0.75rem'), color: '#6c757d' }}>En Uso</div>
                 <div style={{ 
-                  fontSize: getResponsiveValue('1rem', '1.1rem', '1.2rem'), 
+                  fontSize: getResponsiveSize(12, 14, 16), 
+                  color: '#6c757d',
+                  marginBottom: getResponsiveSize(5, 8, 10)
+                }}>
+                  En Uso
+                </div>
+                <div style={{ 
+                  fontSize: getResponsiveSize(20, 22, 24), 
                   fontWeight: 'bold', 
                   color: '#2c3e50',
-                  marginTop: '4px'
+                  marginTop: getResponsiveSize(4, 6, 8)
                 }}>
                   {totalEnUso}
                 </div>
@@ -1274,37 +1307,44 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                 background: esBajoStock ? '#ffeaea' : '#e8f5e9',
                 border: esBajoStock ? '2px solid #e74c3c' : '1px solid #ddd'
               }}>
-                <div style={{ fontSize: getResponsiveValue('0.65rem', '0.7rem', '0.75rem'), color: '#6c757d' }}>Disponibles</div>
                 <div style={{ 
-                  fontSize: getResponsiveValue('1.2rem', '1.3rem', '1.4rem'), 
+                  fontSize: getResponsiveSize(12, 14, 16), 
+                  color: '#6c757d',
+                  marginBottom: getResponsiveSize(5, 8, 10)
+                }}>
+                  Disponibles
+                </div>
+                <div style={{ 
+                  fontSize: getResponsiveSize(20, 22, 24), 
                   fontWeight: 'bold', 
                   color: esBajoStock ? '#e74c3c' : '#27ae60',
-                  marginTop: '4px'
+                  marginTop: getResponsiveSize(4, 6, 8)
                 }}>
                   {disponibles}
                   {esBajoStock && (
-                    <span style={{ 
-                      fontSize: getResponsiveValue('0.65rem', '0.7rem', '0.75rem'), 
-                      marginLeft: '4px', 
+                    <div style={{ 
+                      fontSize: getResponsiveSize(10, 12, 14), 
+                      marginTop: getResponsiveSize(4, 6, 8), 
                       background: '#e74c3c', 
                       color: 'white', 
-                      padding: '2px 5px', 
-                      borderRadius: '10px' 
+                      padding: `${getResponsiveSize(2, 3, 4)}px ${getResponsiveSize(6, 8, 10)}px`, 
+                      borderRadius: '10px',
+                      display: 'inline-block'
                     }}>
-                      BAJO
-                    </span>
+                      BAJO STOCK
+                    </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* TABLA DISTRIBUCIÓN - CENTRADA Y ALINEADA */}
+            {/* TABLA DISTRIBUCIÓN */}
             <h4 style={{ 
               color: '#2c3e50', 
-              margin: `${getResponsiveValue('12px', '14px', '16px')} 0 ${getResponsiveValue('6px', '8px', '10px')}`, 
+              margin: `${getResponsiveSize(15, 20, 25)}px 0 ${getResponsiveSize(10, 12, 15)}px`, 
               fontWeight: '600',
-              fontSize: getResponsiveValue('0.85rem', '0.9rem', '0.95rem'),
-              textAlign: 'center'
+              fontSize: getResponsiveSize(16, 18, 20),
+              textAlign: 'center' as const
             }}>
               Distribución por Cavas
             </h4>
@@ -1322,7 +1362,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                 </thead>
                 <tbody>
                   <tr style={{ background: '#f0f0f0', fontWeight: '600' }}>
-                    <td style={{ ...styles.percherosTableCell, textAlign: 'left' }}>Mínimo inicio</td>
+                    <td style={{ ...styles.percherosTableCell, textAlign: 'left' as const }}>Mínimo inicio</td>
                     <td style={styles.percherosTableCell}>8</td>
                     <td style={styles.percherosTableCell}>8</td>
                     <td style={styles.percherosTableCell}>2</td>
@@ -1331,7 +1371,12 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
                   </tr>
                   {percheros.map((p, i) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? '#fdfdfd' : 'white' }}>
-                      <td style={{ ...styles.percherosTableCell, textAlign: 'left', fontWeight: '500' }}>
+                      <td style={{ 
+                        ...styles.percherosTableCell, 
+                        textAlign: 'left' as const, 
+                        fontWeight: '500',
+                        fontSize: getResponsiveSize(14, 15, 16)
+                      }}>
                         {p.cava}
                       </td>
                       <td style={styles.percherosTableCell}>
@@ -1383,7 +1428,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
         </div>
       )}
 
-      {/* BOTÓN GENERAR INFORME MEJORADO */}
+      {/* BOTÓN GENERAR INFORME */}
       <div style={{ textAlign: 'center' }}>
         <button
           onClick={generarInforme}
