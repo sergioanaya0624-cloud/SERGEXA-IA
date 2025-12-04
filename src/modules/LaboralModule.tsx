@@ -256,11 +256,11 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
 
       if (novedades.length > 0) {
         let filasNovedades = novedades.map(n => 
-          `<tr><td style="padding:8px 6px; font-size:14px;font-weight:bold;">${n.cod}</td><td style="padding:8px 6px; font-size:14px;">${n.desc}</td></tr>`
+          `<tr><td style="padding:8px 6px; font-size:20px;font-weight:bold;">${n.cod}</td><td style="padding:8px 6px; font-size:20px;">${n.desc}</td></tr>`
         ).join('');
         
         htmlInv += `
-          <h3 style="color:#4CAF50;margin:20px 0 10px;text-align:center; font-size:20px;font-weight:bold;">NOVEDADES POR CÓDIGO</h3>
+          <h3 style="color:#4CAF50;margin:20px 0 10px;text-align:center; font-size:22px;font-weight:bold;">NOVEDADES POR CÓDIGO</h3>
           <table style="width:90%;margin:0 auto;font-size:14px; border-collapse:collapse;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
             <tr style="background:#4CAF50;color:white;">
               <th style="padding:10px 8px; font-size:16px; width:25%;font-weight:bold;">CÓDIGO</th>
