@@ -231,7 +231,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
           </div>
         </div>
       `;
-    }
+    } 
 
     let htmlInv = '';
     if (incluir.inv) {
@@ -256,7 +256,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
 
       if (novedades.length > 0) {
         let filasNovedades = novedades.map(n => 
-          `<tr><td style="padding:8px 6px; font-size:28px;font-weight:bold;">${n.cod}</td><td style="padding:8px 6px; font-size:28px;">${n.desc}</td></tr>`
+          `<tr><td style="padding:8px 6px; font-size:22px;font-weight:bold;color:#000;">${n.cod}</td><td style="padding:8px 6px; font-size:22px;color:#000;">${n.desc}</td></tr>`
         ).join('');
         
         htmlInv += `
@@ -697,12 +697,15 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       marginBottom: getResponsiveSize(15, 18, 20),
       textAlign: 'center' as const,
       border: '2px solid #006400'
+      color: '#000'
     },
     checkboxLabel: {
       margin: `0 ${getResponsiveSize(8, 10, 12)}px`,
       display: isMobile ? 'block' : 'inline-block',
       marginBottom: isMobile ? '8px' : '0',
       fontSize: getResponsiveSize(14, 15, 16)
+      color: '#000',
+      fontWeight: 'bold'
     },
     sectionContainer: {
       background: 'white',
@@ -987,7 +990,7 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
 
       {/* CHECKBOX INCLUIR */}
       <div style={styles.checkboxContainer}>
-        <strong style={{fontSize: getResponsiveSize(14, 16, 18)}}>Incluir en el informe:</strong>
+        <strong style={{fontSize: getResponsiveSize(14, 16, 18), color: '#000' }}>Incluir en el informe:</strong>
         <label style={styles.checkboxLabel}>
           <input type="checkbox" checked={incluir.inv} onChange={e => setIncluir({ ...incluir, inv: e.target.checked })} /> Inventario
         </label>
@@ -1100,8 +1103,8 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
               gap: isMobile ? '8px' : '0',
               alignItems: 'center'
             }}>
-              <span style={{ fontSize: getResponsiveSize(14, 15, 16), flex: 1 }}>
-                <strong>{n.cod}</strong> → {n.desc}
+              <span style={{ fontSize: getResponsiveSize(14, 15, 16), flex: 1, color: '#000', fontWeight: '500'  }}>
+                <strong style={{ color: '#000' }}>{n.cod}</strong> → {n.desc}
               </span>
               <button 
                 onClick={() => eliminarNovedad(i)} 
