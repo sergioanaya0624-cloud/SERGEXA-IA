@@ -1,6 +1,10 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/groq.js": { "runtime": "nodejs20.x" },
+    "api/openai.js": { "runtime": "nodejs20.x" }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
