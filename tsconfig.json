@@ -1,14 +1,13 @@
 {
   "compilerOptions": {
-    "moduleResolution": "bundler",
-    "module": "ESNext",
-    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
     "jsx": "react-jsx",
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "moduleDetection": "force",
-    "isolatedModules": true
+    "strict": false
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "api"]
+  "include": ["src", "api"],
+  "exclude": ["node_modules"]
 }
