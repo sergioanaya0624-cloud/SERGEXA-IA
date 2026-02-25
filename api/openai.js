@@ -1,9 +1,9 @@
 // api/openai.ts
 import OpenAI from "openai";
 
-export default async function handler(req: Request) {
+export default async function handler(req, res) {
   try {
-    const { prompt } = await req.json();
+    const { prompt } = req.body;
 
     const client = new OpenAI({
       apiKey: process.env.VITE_OPENAI_API_KEY
@@ -14,13 +14,10 @@ export default async function handler(req: Request) {
       messages: [{ role: "user", content: prompt }]
     });
 
-    return new Response(
-      JSON.stringify({ text: completion.choices[0].message.content }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    res.status(200).json({ text: completion.choices[0].message.content });
 
   } catch (e) {
     console.error("ERROR OPENAI:", e);
-    return new Response(JSON.stringify({ error: "OpenAI error" }), { status: 500 });
+    res.status(500).json({ error: "OpenAI error" });
   }
 }
