@@ -1,10 +1,6 @@
 // api/openai.ts
 import OpenAI from "openai";
 
-export const config = {
-  runtime: "edge",
-};
-
 export default async function handler(req: Request) {
   try {
     const { prompt } = await req.json();
@@ -20,7 +16,7 @@ export default async function handler(req: Request) {
 
     return new Response(
       JSON.stringify({ text: completion.choices[0].message.content }),
-      { status: 200 }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
 
   } catch (e) {
