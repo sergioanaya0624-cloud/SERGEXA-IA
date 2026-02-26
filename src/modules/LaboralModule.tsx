@@ -696,14 +696,14 @@ export default function LaboralModule({ setModule }: { setModule: (m: string) =>
       borderRadius: '10px',
       marginBottom: getResponsiveSize(15, 18, 20),
       textAlign: 'center' as const,
-      border: '2px solid #006400'
+      border: '2px solid #006400',
       color: '#000'
     },
     checkboxLabel: {
       margin: `0 ${getResponsiveSize(8, 10, 12)}px`,
       display: isMobile ? 'block' : 'inline-block',
       marginBottom: isMobile ? '8px' : '0',
-      fontSize: getResponsiveSize(14, 15, 16)
+      fontSize: getResponsiveSize(14, 15, 16),
       color: '#000',
       fontWeight: 'bold'
     },
